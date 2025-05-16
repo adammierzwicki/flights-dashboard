@@ -12,7 +12,8 @@ fluidPage(
                      max = max(flights$date))),
     
     mainPanel(
-      plotOutput("flight_time_series")
+      plotOutput("flight_time_series"),
+      leafletOutput("map", width = "100%", height = "700px"),
     )
   )
 )
