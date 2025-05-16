@@ -1,7 +1,11 @@
 library(shiny)
+library(shinydashboard)
+library(shinyWidgets)
 library(arrow)
 library(dplyr)
+library(DT)
 library(ggplot2)
+library(scales)
 library(leaflet)
 
 flights <- read_parquet("data/flights.parquet")
