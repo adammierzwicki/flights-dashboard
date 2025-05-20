@@ -119,7 +119,13 @@ function(input, output, session) {
     }
     
     ggplotly(p, source = "country_click", tooltip = "text") %>%
-      layout(clickmode = 'event+select')
+      layout(clickmode = 'event+select', dragmode = FALSE) %>%
+      config(
+        displayModeBar = FALSE,
+        staticPlot = FALSE,
+        scrollZoom = FALSE,
+        displaylogo = FALSE
+      )
   })
   
   
@@ -191,4 +197,5 @@ function(input, output, session) {
       color = "blue"
     )
   })
+  
 }
