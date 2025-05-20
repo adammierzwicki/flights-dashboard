@@ -54,7 +54,11 @@ dashboardPage(
                   `actions-box` = TRUE,
                   `live-search` = TRUE,
                   `none-selected-text` = "No country selected"
-                ))
+                )),
+    actionButton("reset_button",
+                 "Reset Filters",
+                 icon = icon("undo"))
+    
   ),
   
   dashboardBody(
@@ -66,9 +70,9 @@ dashboardPage(
                        box(title = "Flights Table", width = NULL, dataTableOutput("table"))),
                 column(width=8,
                        box(title = "Flights Over Time", width = NULL,
-                           plotOutput("flight_time_series")),
-                       box(title = "Top 10 Countries by Flights", width = NULL,
-                           plotOutput("top_barchart")))),
+                           plotlyOutput("flight_time_series")),
+                       box(title = uiOutput("barchart_title"), solidHeader = TRUE, width = NULL,
+                           plotlyOutput("top_barchart")))),
               fluidRow(
                 column(width=12,
                        box(title = "Flights Map", width = NULL,

@@ -1,6 +1,6 @@
-function(input, output) {
+function(input, output, session) {
   
-  output$flight_time_series <- renderPlot({
+  output$flight_time_series <- renderPlotly({
     
     filtered_data <- flights %>%
       mutate(date = as.Date(date)) %>%
@@ -13,36 +13,115 @@ function(input, output) {
     
     grouped_data$date <- as.Date(grouped_data$date)
     
-    grouped_data %>%
+    p <- grouped_data %>%
       ggplot(aes(x = date, y = total)) +
       geom_line(color = "#397DCC") +
       labs(x = '', y = "Number of Flights") +
       theme_minimal()
     
+    ggplotly(p)
     
   })
   
-  output$top_barchart <- renderPlot({
+  # output$top_barchart <- renderPlot({
+  #   
+  #   filtered_data <- flights %>%
+  #     mutate(date = as.Date(date)) %>%
+  #     filter((date >= input$date_range[1] & date <= input$date_range[2]) 
+  #            & (country %in% input$country))
+  #   
+  #   grouped_data <- filtered_data %>%
+  #     group_by(country) %>%
+  #     summarise(total = sum(total))
+  # 
+  #   grouped_data %>%
+  #     arrange(desc(total)) %>%
+  #     head(10) %>%
+  #     ggplot(aes(x = reorder(country, total), y = total)) +
+  #     geom_bar(stat = "identity", fill = "#397DCC") +
+  #     scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) + 
+  #     coord_flip() +
+  #     labs(x = '', y = "Number of Flights") +
+  #     theme_minimal()
+  # })
+  
+  observeEvent(input$reset_button, {
+    updateDateRangeInput(session, "date_range",
+                         start = min(flights$date),
+                         end = max(flights$date))
     
+    updatePickerInput(session, "country",
+                      selected = unique(flights$country))
+  })
+  
+  observeEvent(event_data("plotly_click", source = "country_click"), {
+    click_data <- event_data("plotly_click", source = "country_click")
+    
+    if (!is.null(click_data)) {
+      clicked_country <- click_data$customdata
+      if (!is.null(clicked_country) && clicked_country %in% unique(flights$country)) {
+        updatePickerInput(session, "country", selected = clicked_country)
+      }
+    }
+  })
+  
+  output$barchart_title <- renderUI({
+    if (length(input$country) == 1) {
+      HTML(paste("Top Airports in", input$country, "by Flights"))
+    } else {
+      HTML("Top Countries by Flights")
+    }
+  })
+  
+  output$top_barchart <- renderPlotly({
     filtered_data <- flights %>%
       mutate(date = as.Date(date)) %>%
-      filter((date >= input$date_range[1] & date <= input$date_range[2]) 
-             & (country %in% input$country))
+      filter(date >= input$date_range[1] & date <= input$date_range[2],
+             country %in% input$country)
     
-    grouped_data <- filtered_data %>%
-      group_by(country) %>%
-      summarise(total = sum(total))
-
-    grouped_data %>%
-      arrange(desc(total)) %>%
-      head(10) %>%
-      ggplot(aes(x = reorder(country, total), y = total)) +
-      geom_bar(stat = "identity", fill = "#397DCC") +
-      scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) + 
-      coord_flip() +
-      labs(x = '', y = "Number of Flights") +
-      theme_minimal()
+    if (length(input$country) == 1) {
+      grouped_data <- filtered_data %>%
+        filter(country == input$country[1]) %>%
+        group_by(name) %>%
+        summarise(total = sum(total)) %>%
+        arrange(desc(total)) %>%
+        head(10)
+      
+      p <- grouped_data %>%
+        ggplot(aes(x = reorder(name, total), y = total, text = paste("Airport:", name, "<br>Flights:", format(total, big.mark = ",")))) +
+        geom_bar(stat = "identity", fill = "#397DCC") +
+        coord_flip() +
+        scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+        labs(x = '', y = "Number of Flights") +
+        theme_minimal() +
+        theme(panel.grid.major.y = element_blank(),
+              panel.grid.minor.y = element_blank())
+      
+    } else {
+      grouped_data <- filtered_data %>%
+        group_by(country) %>%
+        summarise(total = sum(total)) %>%
+        arrange(desc(total)) %>%
+        head(10)
+      
+      p <- grouped_data %>%
+        ggplot(aes(x = reorder(country, total),
+                   y = total, 
+                   customdata = country, 
+                   text = paste("Country:", country, "<br>Flights:", format(total, big.mark = ",")))) +
+        geom_bar(stat = "identity", fill = "#397DCC") +
+        coord_flip() +
+        scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+        labs(x = '', y = "Number of Flights") +
+        theme_minimal() +
+        theme(panel.grid.major.y = element_blank(),
+              panel.grid.minor.y = element_blank())
+    }
+    
+    ggplotly(p, source = "country_click", tooltip = "text") %>%
+      layout(clickmode = 'event+select')
   })
+  
   
   output$table <- DT::renderDataTable({
     filtered_data <- flights %>%
@@ -53,12 +132,12 @@ function(input, output) {
     grouped_data <- filtered_data %>%
       group_by(date, country) %>%
       summarise(total = sum(total))
-    
+
     grouped_data$date <- as.Date(grouped_data$date)
-    
+
     DT::datatable(
       grouped_data, extensions = "Buttons", rownames = FALSE,
-      options = list(dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), pageLength = 10, autoWidth = TRUE), 
+      options = list(dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), pageLength = 10, autoWidth = TRUE),
       escape = FALSE)
   })
   
