@@ -8,6 +8,8 @@ library(ggplot2)
 library(scales)
 library(leaflet)
 library(plotly)
+library(ggiraph)
+library(shinyjs)
 
 flights <- read_parquet("data/flights.parquet")
 

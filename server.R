@@ -163,17 +163,18 @@ function(input, output, session) {
     radii <- c(2, 4, 6, 8, 10, 15, 20)
     flights_map$radius <- cut(flights_map$total, breaks = bins, labels = radii, right = FALSE)
     
+    threshold <- quantile(flights_map$total, 0.98, na.rm = TRUE)
+    
     flights_map$radius <- as.numeric(as.character(flights_map$radius))
-    ifelse(flights_map$radius==20 , "#C9384E", "#397DCC")
     leaflet() %>%
       addTiles() %>%
       setView(lng = 15, lat = 55, zoom = 4) %>%
       addCircleMarkers(
         lng = flights_map$longitude_deg, lat = flights_map$latitude_deg,
         radius = flights_map$radius,
-        color=ifelse(flights_map$radius>=20 , "#C9384E", "#397DCC"),
-        stroke =  ifelse(flights_map$radius >= 20 , TRUE, FALSE),, 
-        fillOpacity = ifelse(flights_map$radius >= 15 , 0.5, 0.3),
+        color = ifelse(flights_map$total>= threshold , "#C9384E", "#397DCC"),
+        stroke = ifelse(flights_map$total>= threshold , TRUE, FALSE),, 
+        fillOpacity = ifelse(flights_map$total>= threshold , 0.5, 0.3),
         popup = paste(
           "<b>", flights_map$name, "</b>",
           "<br>ICAO Code:", flights_map$icao_code,
@@ -196,6 +197,46 @@ function(input, output, session) {
       icon = icon("plane"),
       color = "blue"
     )
+  })
+  
+  output$top_10_linegraph <- renderGirafe({
+    filtered_data <- flights %>%
+      mutate(date = as.Date(date)) %>%
+      filter((date >= input$date_range[1] & date <= input$date_range[2])
+             & (country %in% input$country))
+    
+    top_countries <- filtered_data %>%
+      group_by(country) %>%
+      summarise(total = sum(total)) %>%
+      arrange(desc(total)) %>%
+      head(10)
+    
+    grouped_data <- flights %>%
+      select(date, country, total) %>%
+      filter(country %in% top_countries$country) %>%
+      group_by(date, country) %>%
+      summarise(total = sum(total)) %>%
+      ungroup()
+    
+    plot <- grouped_data %>%
+      ggplot(mapping = aes(
+        x = date,
+        y = total,
+        color = country,
+        tooltip = country,
+        data_id = country
+      )) +
+      geom_smooth_interactive(method = "loess", se = FALSE, aes(group = country), span=0.1, hover_nearest = TRUE)
+    interactive_plot <- girafe(ggobj = plot)
+    
+    interactive_plot <- girafe_options(
+      interactive_plot,
+      opts_hover(css = "stroke:#69B3A2; stroke-width: 3px; transition: all 0.3s ease;"),
+      opts_hover_inv("opacity:0.5;filter:saturate(10%);"),
+      opts_toolbar(saveaspng = FALSE)
+    )
+    interactive_plot
+    
   })
   
 }
