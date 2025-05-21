@@ -222,7 +222,7 @@ function(input, output, session) {
         arrange(desc(total)) %>%
         head(3)
       
-      grouped_data <- flights %>%
+      grouped_data <- filtered_data %>%
         filter(country == input$country[1]) %>%
         select(date, name, total) %>%
         filter(name %in% top_airports$name) %>%
@@ -248,7 +248,7 @@ function(input, output, session) {
         arrange(desc(total)) %>%
         head(10)
       
-      grouped_data <- flights %>%
+      grouped_data <- filtered_data %>%
         select(date, country, total) %>%
         filter(country %in% top_countries$country) %>%
         group_by(date, country) %>%
