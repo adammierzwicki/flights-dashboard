@@ -5,9 +5,14 @@ dashboardPage(
   dashboardHeader(title = "Flights Dashboard"),
   
   dashboardSidebar(
+
     sidebarMenu(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("plane")),
       menuItem("About", tabName = "about", icon = icon("info-circle"))   
+    ),
+    tags$div(
+      style = "text-align: center; padding: 10px;",
+      tags$img(src = "logo.png", width = "80%", style = "border-radius: 10px;")
     ),
     
     dateRangeInput("date_range",
@@ -30,33 +35,41 @@ dashboardPage(
     actionButton("reset_button",
                  "Reset Filters",
                  icon = icon("undo"))
-  ),
+    ),
   
   dashboardBody(
+    tags$head(
+      tags$style(HTML("
+      .main-header .logo {
+        font-size: 20px !important;
+        font-weight: bold;
+      }
+    "))
+    ),
     tabItems(
       tabItem(tabName = "dashboard",
               fluidRow(
                 column(width=4,
                        valueBoxOutput("flights_box", width = NULL),
-                       box(title = "Flights Table", width = NULL, height = "958px", dataTableOutput("table"))
+                       box(title = "Flights Table", width = NULL, height = "958px", withSpinner(dataTableOutput("table")))
                 ),
                 column(width=8,
-                       tabBox(title = "Flight Analysis", width = NULL, height = "600px",  # Set height for the entire tabBox
+                       tabBox(title = "Flight Analysis", width = NULL, height = "600px", 
                               tabPanel("Flights Over Time", 
-                                       plotlyOutput("flight_time_series", width=NULL, height = "500px")  # Set height for this plot
+                                        withSpinner(plotlyOutput("flight_time_series", height = "550px", width = "100%"))
                               ),
                               tabPanel(title = uiOutput("top10_title"),
-                                       girafeOutput("top_10_linegraph", height = "500px")  # Set height for this plot
+                                       withSpinner(girafeOutput("top_10_linegraph", height = "550px", width = "100%"))
                               )
                        ),
                        box(title = uiOutput("barchart_title"), solidHeader = TRUE, width = NULL,
-                           plotlyOutput("top_barchart"))
+                           withSpinner(plotlyOutput("top_barchart")))
                 )
               ),
               fluidRow(
                 column(width=12,
                        box(title = "Flights Map", width = NULL, solidHeader = TRUE,
-                           leafletOutput("map", width = "100%", height = "1000px"))
+                           withSpinner(leafletOutput("map", width = "100%", height = "1000px")))
                 )
               )
       ),

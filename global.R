@@ -9,6 +9,7 @@ library(scales)
 library(leaflet)
 library(plotly)
 library(ggiraph)
+library(shinycssloaders)
 
 flights <- read_parquet("data/flights.parquet")
 

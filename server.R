@@ -23,28 +23,6 @@ function(input, output, session) {
     
   })
   
-  # output$top_barchart <- renderPlot({
-  #   
-  #   filtered_data <- flights %>%
-  #     mutate(date = as.Date(date)) %>%
-  #     filter((date >= input$date_range[1] & date <= input$date_range[2]) 
-  #            & (country %in% input$country))
-  #   
-  #   grouped_data <- filtered_data %>%
-  #     group_by(country) %>%
-  #     summarise(total = sum(total))
-  # 
-  #   grouped_data %>%
-  #     arrange(desc(total)) %>%
-  #     head(10) %>%
-  #     ggplot(aes(x = reorder(country, total), y = total)) +
-  #     geom_bar(stat = "identity", fill = "#397DCC") +
-  #     scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) + 
-  #     coord_flip() +
-  #     labs(x = '', y = "Number of Flights") +
-  #     theme_minimal()
-  # })
-  
   observeEvent(input$reset_button, {
     updateDateRangeInput(session, "date_range",
                          start = min(flights$date),
@@ -87,15 +65,19 @@ function(input, output, session) {
         arrange(desc(total)) %>%
         head(10)
       
+      top_colors <- setNames(RColorBrewer::brewer.pal(n = nrow(grouped_data), "Paired"), grouped_data$name)
+      
       p <- grouped_data %>%
-        ggplot(aes(x = reorder(name, total), y = total, text = paste("Airport:", name, "<br>Flights:", format(total, big.mark = ",")))) +
-        geom_bar(stat = "identity", fill = "#397DCC") +
+        ggplot(aes(x = reorder(name, total), y = total, fill = name, text = paste("Airport:", name, "<br>Flights:", format(total, big.mark = ",")))) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual(values = top_colors) + 
         coord_flip() +
         scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
         labs(x = '', y = "Number of Flights") +
         theme_minimal() +
         theme(panel.grid.major.y = element_blank(),
-              panel.grid.minor.y = element_blank())
+              panel.grid.minor.y = element_blank()) +
+        theme(legend.position = "none")
       
     } else {
       grouped_data <- filtered_data %>%
@@ -104,18 +86,23 @@ function(input, output, session) {
         arrange(desc(total)) %>%
         head(10)
       
+      top_colors <- setNames(RColorBrewer::brewer.pal(n = nrow(grouped_data), "Paired"), grouped_data$country)
+      
       p <- grouped_data %>%
         ggplot(aes(x = reorder(country, total),
                    y = total, 
                    customdata = country, 
+                   fill = country,
                    text = paste("Country:", country, "<br>Flights:", format(total, big.mark = ",")))) +
-        geom_bar(stat = "identity", fill = "#397DCC") +
+        geom_bar(stat = "identity") +
+        scale_fill_manual(values = top_colors) +
         coord_flip() +
         scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
         labs(x = '', y = "Number of Flights") +
         theme_minimal() +
         theme(panel.grid.major.y = element_blank(),
-              panel.grid.minor.y = element_blank())
+              panel.grid.minor.y = element_blank()) +
+        theme(legend.position = "none")
     }
     
     ggplotly(p, source = "country_click", tooltip = "text") %>%
@@ -201,9 +188,9 @@ function(input, output, session) {
   
   output$top10_title <- renderUI({
     if (length(input$country) == 1) {
-      HTML(paste("Top 3 Airports in", input$country, "by Flights"))
+      HTML(paste("Top 5 Airports in", input$country, "by Flights"))
     } else {
-      HTML("Top 10 Countries by Flights")
+      HTML("Top 5 Countries by Flights")
     }
   })
   
@@ -220,7 +207,9 @@ function(input, output, session) {
         group_by(name) %>%
         summarise(total = sum(total)) %>%
         arrange(desc(total)) %>%
-        head(3)
+        head(5)
+      
+      top_colors <- setNames(RColorBrewer::brewer.pal(n = nrow(top_airports), "Paired"), top_airports$name)
       
       grouped_data <- filtered_data %>%
         filter(country == input$country[1]) %>%
@@ -239,14 +228,19 @@ function(input, output, session) {
           data_id = name
         )) +
         geom_smooth_interactive(method = "loess", se = FALSE, aes(group = name), span=0.1, hover_nearest = TRUE) +
-        theme_minimal()
+        scale_color_manual(values = top_colors) +
+        theme_minimal()+
+        theme(legend.position = "none") + 
+        labs(x = '', y = "Number of Flights")
 
     } else {
       top_countries <- filtered_data %>%
         group_by(country) %>%
         summarise(total = sum(total)) %>%
         arrange(desc(total)) %>%
-        head(10)
+        head(5)
+      
+      top_colors <- setNames(RColorBrewer::brewer.pal(n = nrow(top_countries), "Paired"), top_countries$country)
       
       grouped_data <- filtered_data %>%
         select(date, country, total) %>%
@@ -264,10 +258,14 @@ function(input, output, session) {
           data_id = country
         )) +
         geom_smooth_interactive(method = "loess", se = FALSE, aes(group = country), span=0.1, hover_nearest = TRUE) +
-        theme_minimal()
+        scale_color_manual(values = top_colors) +
+        theme_minimal() +
+        theme(legend.position = "none") + 
+        labs(x = '', y = "Number of Flights")
+        
     }
 
-    interactive_plot <- girafe(ggobj = plot, width_svg = 13, height_svg = 5)
+    interactive_plot <- girafe(ggobj = plot, width_svg =10, height_svg = 5)
 
     interactive_plot <- girafe_options(
       interactive_plot,
