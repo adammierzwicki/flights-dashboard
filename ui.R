@@ -38,22 +38,26 @@ dashboardPage(
               fluidRow(
                 column(width=4,
                        valueBoxOutput("flights_box", width = NULL),
-                       box(title = "Flights Table", width = NULL, dataTableOutput("table"))),
+                       box(title = "Flights Table", width = NULL, height = "958px", dataTableOutput("table"))
+                ),
                 column(width=8,
-                       tabBox(title = "Flight Analysis", width = NULL, height = "500px",
+                       tabBox(title = "Flight Analysis", width = NULL, height = "600px",  # Set height for the entire tabBox
                               tabPanel("Flights Over Time", 
-                                       plotlyOutput("flight_time_series")),
-                              tabPanel("Top 10",
-                                       girafeOutput("top_10_linegraph")),
+                                       plotlyOutput("flight_time_series", width=NULL, height = "500px")  # Set height for this plot
+                              ),
+                              tabPanel(title = uiOutput("top10_title"),
+                                       girafeOutput("top_10_linegraph", height = "500px")  # Set height for this plot
+                              )
                        ),
-
                        box(title = uiOutput("barchart_title"), solidHeader = TRUE, width = NULL,
-                           plotlyOutput("top_barchart")))),
-
+                           plotlyOutput("top_barchart"))
+                )
+              ),
               fluidRow(
                 column(width=12,
-                       box(title = "Flights Map", width = NULL,
-                           leafletOutput("map", width = "100%", height = "500px")))
+                       box(title = "Flights Map", width = NULL, solidHeader = TRUE,
+                           leafletOutput("map", width = "100%", height = "1000px"))
+                )
               )
       ),
       tabItem(tabName = "about",
@@ -63,7 +67,7 @@ dashboardPage(
                 "The map shows number of total operations for selected airports, and the table provides detailed information about each flight."),
               br(),
               h1("Data Source"),
-              p("Based on ", a("European Flights Dataset", href="https://www.kaggle.com/datasets/umerhaddii/european-flights-dataset?resource=download"), "along with ", a("Airports geospatial data", href="https://ourairports.com/data/"), "."),
+              p("Based on ", a("European Flights Dataset", href="https://www.kaggle.com/datasets/umerhaddii/european-flights-dataset?resource=download"), "along with ", a("Airports geospatial data", href="https://ourairports.com/data/"), ".")
       )
     )
   )

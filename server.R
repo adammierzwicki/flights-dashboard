@@ -143,7 +143,7 @@ function(input, output, session) {
 
     DT::datatable(
       grouped_data, extensions = "Buttons", rownames = FALSE,
-      options = list(dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), pageLength = 10, autoWidth = TRUE),
+      options = list(dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), pageLength = 20, autoWidth = TRUE),
       escape = FALSE)
   })
   
@@ -199,44 +199,83 @@ function(input, output, session) {
     )
   })
   
+  output$top10_title <- renderUI({
+    if (length(input$country) == 1) {
+      HTML(paste("Top 3 Airports in", input$country, "by Flights"))
+    } else {
+      HTML("Top 10 Countries by Flights")
+    }
+  })
+  
   output$top_10_linegraph <- renderGirafe({
     filtered_data <- flights %>%
       mutate(date = as.Date(date)) %>%
       filter((date >= input$date_range[1] & date <= input$date_range[2])
              & (country %in% input$country))
     
-    top_countries <- filtered_data %>%
-      group_by(country) %>%
-      summarise(total = sum(total)) %>%
-      arrange(desc(total)) %>%
-      head(10)
     
-    grouped_data <- flights %>%
-      select(date, country, total) %>%
-      filter(country %in% top_countries$country) %>%
-      group_by(date, country) %>%
-      summarise(total = sum(total)) %>%
-      ungroup()
-    
-    plot <- grouped_data %>%
-      ggplot(mapping = aes(
-        x = date,
-        y = total,
-        color = country,
-        tooltip = country,
-        data_id = country
-      )) +
-      geom_smooth_interactive(method = "loess", se = FALSE, aes(group = country), span=0.1, hover_nearest = TRUE)
-    interactive_plot <- girafe(ggobj = plot)
-    
+    if (length(input$country) == 1) {
+      top_airports <- flights %>%
+        filter(country == input$country[1]) %>%
+        group_by(name) %>%
+        summarise(total = sum(total)) %>%
+        arrange(desc(total)) %>%
+        head(3)
+      
+      grouped_data <- flights %>%
+        filter(country == input$country[1]) %>%
+        select(date, name, total) %>%
+        filter(name %in% top_airports$name) %>%
+        group_by(date, name) %>%
+        summarise(total = sum(total)) %>%
+        ungroup()
+      
+      plot <- grouped_data %>%
+        ggplot(mapping = aes(
+          x = date,
+          y = total,
+          color = name,
+          tooltip = name,
+          data_id = name
+        )) +
+        geom_smooth_interactive(method = "loess", se = FALSE, aes(group = name), span=0.1, hover_nearest = TRUE) +
+        theme_minimal()
+
+    } else {
+      top_countries <- filtered_data %>%
+        group_by(country) %>%
+        summarise(total = sum(total)) %>%
+        arrange(desc(total)) %>%
+        head(10)
+      
+      grouped_data <- flights %>%
+        select(date, country, total) %>%
+        filter(country %in% top_countries$country) %>%
+        group_by(date, country) %>%
+        summarise(total = sum(total)) %>%
+        ungroup()
+      
+      plot <- grouped_data %>%
+        ggplot(mapping = aes(
+          x = date,
+          y = total,
+          color = country,
+          tooltip = country,
+          data_id = country
+        )) +
+        geom_smooth_interactive(method = "loess", se = FALSE, aes(group = country), span=0.1, hover_nearest = TRUE) +
+        theme_minimal()
+    }
+
+    interactive_plot <- girafe(ggobj = plot, width_svg = 13, height_svg = 5)
+
     interactive_plot <- girafe_options(
       interactive_plot,
-      opts_hover(css = "stroke:#69B3A2; stroke-width: 3px; transition: all 0.3s ease;"),
+      opts_hover(css = "stroke:#397DCC; stroke-width: 3px; transition: all 0.3s ease;"),
       opts_hover_inv("opacity:0.5;filter:saturate(10%);"),
       opts_toolbar(saveaspng = FALSE)
     )
     interactive_plot
-    
   })
   
 }
