@@ -14,6 +14,7 @@ dashboardPage(
       style = "text-align: center; padding: 10px;",
       tags$img(src = "logo.png", width = "80%", style = "border-radius: 10px;")
     ),
+
     
     dateRangeInput("date_range",
                    "Select Date Range:",
@@ -54,8 +55,8 @@ dashboardPage(
                        box(title = "Flights Table", width = NULL, height = "958px", withSpinner(dataTableOutput("table")))
                 ),
                 column(width=8,
-                       tabBox(title = "Flight Analysis", width = NULL, height = "600px", 
-                              tabPanel("Flights Over Time", 
+                       tabBox(title = "Flights Over Time Analysis", width = NULL, height = "600px", 
+                              tabPanel("Total Flights Over Time", 
                                         withSpinner(plotlyOutput("flight_time_series", height = "550px", width = "100%"))
                               ),
                               tabPanel(title = uiOutput("top10_title"),
@@ -80,7 +81,7 @@ dashboardPage(
                 "The map shows number of total operations for selected airports, and the table provides detailed information about each flight."),
               br(),
               h1("Data Source"),
-              p("Based on ", a("European Flights Dataset", href="https://www.kaggle.com/datasets/umerhaddii/european-flights-dataset?resource=download"), "along with ", a("Airports geospatial data", href="https://ourairports.com/data/"), ".")
+              p("Based on ", a("European Flights Dataset", href="https://www.kaggle.com/datasets/umerhaddii/european-flights-dataset?resource=download"), "along with ", a("Airports geospatial data", href="https://ourairports.com/data/"), "."),
       )
     )
   )

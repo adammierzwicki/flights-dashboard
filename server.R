@@ -130,7 +130,7 @@ function(input, output, session) {
 
     DT::datatable(
       grouped_data, extensions = "Buttons", rownames = FALSE,
-      options = list(dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), pageLength = 20, autoWidth = TRUE),
+      options = list(dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), pageLength = 18, autoWidth = TRUE),
       escape = FALSE)
   })
   
@@ -150,8 +150,12 @@ function(input, output, session) {
     radii <- c(2, 4, 6, 8, 10, 15, 20)
     flights_map$radius <- cut(flights_map$total, breaks = bins, labels = radii, right = FALSE)
     
-    threshold <- quantile(flights_map$total, 0.98, na.rm = TRUE)
-    
+    if(length(flights_map$total) == 1){
+      threshold <- flights_map$total
+    }
+    else{
+      threshold <- quantile(flights_map$total, 0.98, na.rm = TRUE)
+    }
     flights_map$radius <- as.numeric(as.character(flights_map$radius))
     leaflet() %>%
       addTiles() %>%
@@ -188,9 +192,9 @@ function(input, output, session) {
   
   output$top10_title <- renderUI({
     if (length(input$country) == 1) {
-      HTML(paste("Top 5 Airports in", input$country, "by Flights"))
+      HTML(paste("Top Airports in", input$country, "by Flights Over Years"))
     } else {
-      HTML("Top 5 Countries by Flights")
+      HTML("Top Countries by Flights Over Years")
     }
   })
   
