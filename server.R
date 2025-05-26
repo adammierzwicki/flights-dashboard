@@ -228,8 +228,8 @@ function(input, output, session) {
           x = date,
           y = total,
           color = name,
-          tooltip = name,
-          data_id = name
+          tooltip = gsub("'", "&#39;", name),
+          data_id = gsub("'", "&#39;", name)
         )) +
         geom_smooth_interactive(method = "loess", se = FALSE, aes(group = name), span=0.1, hover_nearest = TRUE) +
         scale_color_manual(values = top_colors) +
