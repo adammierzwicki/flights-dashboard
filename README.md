@@ -1,5 +1,7 @@
 # flights-dashboard
 
+[Live dashboard](https://adammierzwicki.shinyapps.io/flights-dashboard/)
+
 This dashboard provides a visualization of European flights in recent years. It enables users to explore flight trends and geographic distribution of airports using interactive plots.
 
 Based on [European Flights Dataset](https://www.kaggle.com/datasets/umerhaddii/european-flights-dataset?resource=download) along with [airports geospatial data](https://ourairports.com/data/)
